@@ -7,7 +7,8 @@ clear all;
 N = 2^9; %  number of Fourier modes
 numiter = 10; % number of secant continuation iterations
 ds = 0.8; % secant continuation step size
-dcx = 1e-4; % "baby continuation" step size/direction
+dvar = 1e-4; % "baby continuation" step size/direction
+options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
 
 % define constants
 eps = 0.3; % theta parameter
@@ -21,18 +22,23 @@ zeta = (0:L/N:L-L/N)';
 
 
 % sample code for using all of the other functions
-% plot u = phi - zeta at x = 0
-[fsp1, fsp2, fsp3, fsp4] = fsolve_phi(N, ell, zeta, eps, c_x, k_y);
-figure('Name', 'plot_u')
-plot_u(fsp1, fsp2, fsp4);
-
-% plot FT(phi) vs. zeta
-figure('Name', 'plot_ftphi')
-plot_ftphi(fsp1, fsp3, fsp4);
+% % plot u = phi - zeta at x = 0
+% [fsp1, fsp2, fsp3, fsp4] = fsolve_phi(N, ell, zeta, eps, c_x, k_y, options);
+% figure('Name', 'plot_u')
+% plot_u(fsp1, fsp2, fsp4);
+% 
+% % plot FT(phi) vs. zeta
+% figure('Name', 'plot_ftphi')
+% plot_ftphi(fsp1, fsp3, fsp4);
 
 % plot k_x vs. c_x for each k_y in k_ys
 k_ys = 0.1:0.1:1;
-[fsk1, fsk2] = fsolve_kx(N, numiter, ell, zeta, eps, c_x, k_ys, k_xinit, phiinit, ds, dcx);
-figure('Name', 'plot_kx')
-plot_kx(fsk1, fsk2, 'c_x')
+[fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
+figure('Name', 'plot_kx in c_x')
+plot_kx(fsk1, fsk2, fsk3, fsk4)
 
+% plot k_x vs. k_y for each c_x in c_xs
+c_xs = 0.1:0.1:1;
+[fsk5, fsk6, fsk7, fsk8] = fsolve_kx("c_x", c_xs, "k_y", k_y, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
+figure('Name', 'plot_kx in k_y')
+plot_kx(fsk5, fsk6, fsk7, fsk8)

@@ -1,17 +1,16 @@
-function plot_kx (k_ys, kx_array, kx_param)
-% k_ys, kx_array are the output of fsolve_kx
-% kx_param specifies what k_x is a function of, "c_x" or "k_y" (not yet needed)
+function plot_kx (const_id, constlist, var_id, kx_array)
+% [const_id, constlist, var_id, kx_array] is the output of fsolve_kx
 
-colors = distinguishable_colors(length(k_ys));
+colors = distinguishable_colors(length(constlist));
 hold on
-for i = 1:length(k_ys)
+for i = 1:length(constlist)
     plot(kx_array(2*i,:),kx_array(2*i-1,:), 'Color', colors(i, :))
 end
 hold off
-title(legend(string(k_ys)), 'k_y')
+title(legend(string(constlist)), const_id)
 legend("Location", "eastoutside")
-xlabel('c_x')
+xlabel(var_id)
 ylabel('k_x')
-title('k_x vs. c_x for fixed k_y')
+title("k_x vs. " + var_id + " for fixed " + const_id)
 
 end

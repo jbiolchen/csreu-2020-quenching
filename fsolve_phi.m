@@ -1,8 +1,6 @@
-function [zeta, phigrid, fftphigrid, cgrid] = fsolve_phi(N, ell, zeta, eps, c_x, k_y)
+function [zeta, phigrid, fftphigrid, cgrid] = fsolve_phi(N, ell, zeta, eps, c_x, k_y, options)
 % previously named solve_int2d
 % calculate phi and FT(phi) using Newton's method, where desired solution u = phi - zeta
-
-options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
 
 cgrid = c_x*(2/3).^(0:19);
 k_xgrid = zeros(length(cgrid),1);
