@@ -14,7 +14,7 @@ options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'
 eps = 0.3; % theta parameter
 c_x = 0.1;
 c_xs = 0.1:0.1:1.1; % fixed values for fsolve_kx only
-k_y = 0.1;
+k_y = 0.2;
 k_ys = 0.1:0.1:1.1; % fixed values for fsolve_kx only
 L = 2*pi; % length of domain
 k_xinit = 1; % initial k_x; notice that k_x = -c_y*k_y/c_x with c_y = -c_x/k_y
@@ -25,9 +25,9 @@ zeta = (0:L/N:L-L/N)';
 
 % ========== sample code for using all of the other functions ==========
 % % plot u = phi - zeta at x = 0
-% [fsp1, fsp2, fsp3, fsp4] = fsolve_phi(N, ell, zeta, eps, c_x, k_y, options);
-% figure('Name', 'plot_u')
-% plot_u(fsp1, fsp2, fsp4);
+ [fsp1, fsp2, fsp3, fsp4] = fsolve_phi(N, ell, zeta, eps, c_x, k_y, options);
+ figure('Name', 'plot_u')
+ plot_u(fsp1, fsp2, fsp4);
 % 
 % % plot FT(phi) vs. zeta
 % figure('Name', 'plot_ftphi')
@@ -50,7 +50,7 @@ zeta = (0:L/N:L-L/N)';
 % plot_kx(fsk5, fsk6, fsk7, fsk8, [], [])
 % ======================================================================
 
-
+%{
 % plot k_x vs. c_x for each k_y in k_ys
 % dotted line = monotone increasing, dot-dashed line = monotone decreasing
 [fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
@@ -68,3 +68,4 @@ plot_kx(fsk5, fsk6, fsk7, fsk8, [], [])
 % every curve on the above plot appeasrs monotone increasing
 % indicating that explicitly makes the plot harder to read, but you can do it like this:
 % plot_kx(fsk5, fsk6, fsk7, fsk8, monoinc2, monodec2)
+%}
