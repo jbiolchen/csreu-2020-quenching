@@ -1,5 +1,5 @@
 % main function where constants are defined and other functions are called
-%
+
 %close all;
 clear all;
 
