@@ -1,6 +1,6 @@
 % main function where constants are defined and other functions are called
 
-close all;
+%close all;
 clear all;
 
 % define optimization parameters
