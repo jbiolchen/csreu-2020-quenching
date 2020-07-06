@@ -2,7 +2,7 @@ function [zeta, phigrid, fftphigrid, cgrid] = fsolve_phi(N, ell, zeta, eps, c_x,
 % previously named solve_int2d
 % calculate phi and FT(phi) using Newton's method, where desired solution u = phi - zeta
 
-cgrid = [0 c_x*(2/3).^(0:9)];
+cgrid = [0 c_x*(2/3).^(0:19)];
 k_xgrid = zeros(length(cgrid),1);
 phigrid = zeros(N,length(cgrid));
 fftphigrid = zeros(N,length(cgrid));
