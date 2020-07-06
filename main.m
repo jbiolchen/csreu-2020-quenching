@@ -24,15 +24,17 @@ zeta = (0:L/N:L-L/N)';
 
 
 % ========== sample code for using all of the other functions ==========
-% % plot u = phi - zeta at x = 0
+% % plot u = phi - zeta at x = 0 and plot FT(phi) vs. zeta
  [fsp1, fsp2, fsp3, fsp4] = fsolve_phi(N, ell, zeta, eps, c_x, k_y, options);
- figure('Name', 'plot_u')
- plot_u(fsp1, fsp2, fsp4);
-% 
-% % plot FT(phi) vs. zeta
-% figure('Name', 'plot_ftphi')
-% plot_ftphi(fsp1, fsp3, fsp4);
-% 
+ if max(abs(fsp3(N/4:3*N/4))) < 1e-4
+     figure('Name', 'plot_u')
+     plot_u(fsp1, fsp2, fsp4);
+     figure('Name', 'plot_ftphi')
+     plot_ftphi(fsp1, fsp3, fsp4, N);
+ else
+     disp("Need more Fourier nodes")
+ end
+
 % % plot k_x vs. c_x for each k_y in k_ys
 % [fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
 % figure('Name', 'plot_kx in c_x')
