@@ -36,35 +36,36 @@ zeta = (0:L/N:L-L/N)';
 % % plot k_x vs. c_x for each k_y in k_ys
 % [fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
 % figure('Name', 'plot_kx in c_x')
-% plot_kx(fsk1, fsk2, fsk3, fsk4, [], [])
+% plot_kx(fsk1, fsk2, fsk3, fsk4, [], [], [])
 %
-% % as above, with monotone plots given different line styles
+% % as above, with monotone plots and global minima of non-monotone plots marked
 % monoinc = seqtype_kx(1, fsk4, fsk2);
 % monodec = seqtype_kx(1i, fsk4, fsk2);
+% [~, ~, pts] = seqtype_kx(0, fsk4, fsk2);
 % figure('Name', 'plot_kx in c_x, monotone marked')
-% plot_kx(fsk1, fsk2, fsk3, fsk4, monoinc, monodec)
+% plot_kx(fsk1, fsk2, fsk3, fsk4, monoinc, monodec, pts)
+% 
+% % for non-monotone plots of k_x vs. c_x, plot the (k_y, c_x) corresponding to global minima
+% figure('Name', 'plot_extrloc')
+% plot_extrloc(fsk2, fsk4, pts)
 % 
 % % plot k_x vs. k_y for each c_x in c_xs
 % [fsk5, fsk6, fsk7, fsk8] = fsolve_kx("c_x", c_xs, "k_y", k_y, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
 % figure('Name', 'plot_kx in k_y')
-% plot_kx(fsk5, fsk6, fsk7, fsk8, [], [])
+% plot_kx(fsk5, fsk6, fsk7, fsk8, [], [], [])
 % ======================================================================
 
 
 % plot k_x vs. c_x for each k_y in k_ys
 % dotted line = monotone increasing, dot-dashed line = monotone decreasing
-[fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
-monoinc = seqtype_kx(1, fsk4, fsk2);
-monodec = seqtype_kx(1i, fsk4, fsk2);
+[const_id, constlist, var_id, kx_array] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
+monoinc = seqtype_kx(1, kx_array, constlist);
+monodec = seqtype_kx(1i, kx_array, constlist);
+[~, ~, extr_pts] = seqtype_kx(0, kx_array, constlist);
 figure('Name', 'plot_kx in c_x')
-plot_kx(fsk1, fsk2, fsk3, fsk4, monoinc, monodec)
+plot_kx(const_id, constlist, var_id, kx_array, monoinc, monodec, extr_pts)
 
-% plot k_x vs. k_y for each c_x in c_xs
-[fsk5, fsk6, fsk7, fsk8] = fsolve_kx("c_x", c_xs, "k_y", k_y, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
-monoinc2 = seqtype_kx(1, fsk8, fsk6);
-monodec2 = seqtype_kx(1i, fsk8, fsk6);
-figure('Name', 'plot_kx in k_y')
-plot_kx(fsk5, fsk6, fsk7, fsk8, [], [])
-% every curve on the above plot appeasrs monotone increasing
-% indicating that explicitly makes the plot harder to read, but you can do it like this:
-% plot_kx(fsk5, fsk6, fsk7, fsk8, monoinc2, monodec2)
+% for non-monotone plots of k_x vs. c_x, plot the (k_y, c_x) corresponding to global minima
+figure('Name', 'plot_extrloc')
+plot_extrloc(constlist, kx_array, extr_pts)
+
