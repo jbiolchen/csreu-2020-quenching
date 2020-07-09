@@ -35,6 +35,7 @@ for j = 1:length(cgrid)
             f = @(phiext) int_eq2d(phiext,cgrid(j),k_y,ell,eps,N,zeta);
             phiextnew = fsolve(f,phiextinit, options);
             phiextinit = phiextnew;
+            k_xgrid(j) = phiextinit(end);
         end   
     end
 end

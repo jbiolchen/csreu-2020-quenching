@@ -4,12 +4,13 @@ close all;
 clear all;
 
 % define optimization parameters
-N = 2^5; %  number of Fourier modes
+N = 2^9; %  number of Fourier modes
 numiter = 30; % number of secant continuation iterations
 ds = 0.8; % secant continuation step size
 dvar = 1e-4; % "baby continuation" step size/direction
 options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
-regrid_error = 1e-4; % changes how fsolve_phi runs
+regrid_error = 1e-4; % threshold to double N in fsolve_phi, fsolve_kx
+adaptive_ds = true;
 
 % define constants
 eps = 0.3; % theta parameter
@@ -20,7 +21,7 @@ k_ys = 0.1:0.1:1.1; % fixed values for fsolve_kx only
 L = 2*pi; % length of domain
 k_xinit = 1; % initial k_x; notice that k_x = -c_y*k_y/c_x with c_y = -c_x/k_y
 phiinit = zeros(N,1); % initial function
-ell = [[0:N/2] [-N/2+1: -1]]'; % variable in Fourier space
+ell = [0:N/2 -N/2+1:-1]'; % variable in Fourier space
 zeta = (0:L/N:L-L/N)';
 
 
@@ -35,7 +36,7 @@ zeta = (0:L/N:L-L/N)';
 % plot_ftphi(fsp1, fsp3, fsp4);
 % 
 % % plot k_x vs. c_x for each k_y in k_ys
-% [fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
+% [fsk1, fsk2, fsk3, fsk4] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds);
 % figure('Name', 'plot_kx in c_x')
 % plot_kx(fsk1, fsk2, fsk3, fsk4, [], [], [])
 %
@@ -51,7 +52,7 @@ zeta = (0:L/N:L-L/N)';
 % plot_extrloc(fsk2, fsk4, pts)
 % 
 % % plot k_x vs. k_y for each c_x in c_xs
-% [fsk5, fsk6, fsk7, fsk8] = fsolve_kx("c_x", c_xs, "k_y", k_y, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
+% [fsk5, fsk6, fsk7, fsk8] = fsolve_kx("c_x", c_xs, "k_y", k_y, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds);
 % figure('Name', 'plot_kx in k_y')
 % plot_kx(fsk5, fsk6, fsk7, fsk8, [], [], [])
 % 
@@ -62,19 +63,14 @@ zeta = (0:L/N:L-L/N)';
 % ======================================================================
 
 
- % given k_y, plot k_x vs. c_x with regridding on
-[zeta, k_xgrid, ~, cgrid] = fsolve_phi(N, L, ell, zeta, eps, c_x, k_y, options, regrid_error);
-figure('Name', "fsolve_phi: k_x vs. c_x for k_y = " + string(k_y))
-plot_kx("k_y", [k_y], "c_x", [k_xgrid; cgrid], [], [], [])
-
-% % plot k_x vs. c_x for each k_y in k_ys
-% % dotted line = monotone increasing, dot-dashed line = monotone decreasing
-% [const_id, constlist, var_id, kx_array] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options);
-% monoinc = seqtype_kx(1, kx_array, constlist);
-% monodec = seqtype_kx(1i, kx_array, constlist);
-% [~, ~, extr_pts] = seqtype_kx(0, kx_array, constlist);
-% figure('Name', 'plot_kx in c_x')
-% plot_kx(const_id, constlist, var_id, kx_array, monoinc, monodec, extr_pts)
+% plot k_x vs. c_x for each k_y in k_ys
+% dotted line = monotone increasing, dot-dashed line = monotone decreasing
+[const_id, constlist, var_id, kx_array] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds);
+monoinc = seqtype_kx(1, kx_array, constlist);
+monodec = seqtype_kx(1i, kx_array, constlist);
+[~, ~, extr_pts] = seqtype_kx(0, kx_array, constlist);
+figure('Name', 'plot_kx in c_x')
+plot_kx(const_id, constlist, var_id, kx_array, monoinc, monodec, extr_pts)
 % 
 % % for non-monotone plots of k_x vs. c_x, plot the (k_y, c_x) corresponding to global minima
 % figure('Name', 'plot_extrloc')
