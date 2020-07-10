@@ -2,12 +2,12 @@
 
 close all;
 clear all;
-
+ 
 % define optimization parameters
 N = 2^9; %  number of Fourier modes
-numiter = 30; % number of secant continuation iterations
+numiter = 5; % number of secant continuation iterations
 ds = 0.8; % secant continuation step size
-dvar = 1e-4; % "baby continuation" step size/direction
+dvar = -1e-4; % "baby continuation" step size/direction
 options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
 regrid_error = 1e-4; % threshold to double N in fsolve_phi, fsolve_kx
 adaptive_ds = true;
@@ -17,7 +17,7 @@ eps = 0.3; % theta parameter
 c_x = 0.1;
 c_xs = 0.1:0.1:1.1; % fixed values for fsolve_kx only
 k_y = 0.1;
-k_ys = 0.1:0.1:1.1; % fixed values for fsolve_kx only
+k_ys = 0.1:0.1:0.2; % fixed values for fsolve_kx only
 L = 2*pi; % length of domain
 k_xinit = 1; % initial k_x; notice that k_x = -c_y*k_y/c_x with c_y = -c_x/k_y
 phiinit = zeros(N,1); % initial function
