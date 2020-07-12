@@ -60,6 +60,24 @@ for i = 1:length(constlist)
             err=abs(fft(usol(1:end-2)));
             err=max(err(3*N/8:5*N/8));
             if err < regrid_error
+                % using a stricter err definition, decrease N for iteration j+1 if reasonable
+                err=abs(fft(usol(1:end-2)));
+                err=max(err(1*N/8:7*N/8));
+                if err < regrid_error
+                    disp('Now decreasing grid size to new N = ' + string(N/2) + ' for iteration ' + string(j+1))
+                    
+                    usolh = fft(usol(1:end-2));
+                    usolh = [usolh(1:N/4); usolh(3*N/4+1:N)];
+                    usol = [ifft(usolh, 'symmetric')/2; usol(N+1:N+2)];
+                    
+                    u0h = fft(u0(1:end-2));
+                    u0h = [u0h(1:N/4); u0h(3*N/4+1:N)];
+                    u0 = [ifft(u0h,'symmetric')/2;u0(N+1:N+2)];
+
+                    N=N/2;
+                    ell = [0:N/2 -N/2+1:-1]'; % variable in Fourier space
+                    zeta = (0:L/N:L-L/N)';
+                end
                 break
             end
             disp('Now refining grid to new N = ' + string(N*2) + ' for iteration ' + string(j))

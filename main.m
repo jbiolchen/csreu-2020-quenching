@@ -6,7 +6,7 @@ clear all;
 % define optimization parameters
 N = 2^9; %  number of Fourier modes
 numiter = 5; % number of secant continuation iterations
-ds = 0.8; % secant continuation step size
+ds = 0.8/sqrt(N); % secant continuation step size
 dvar = -1e-4; % "baby continuation" step size/direction
 options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
 regrid_error = 1e-4; % threshold to double N in fsolve_phi, fsolve_kx
