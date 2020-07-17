@@ -1,4 +1,4 @@
-function [const_id, constlist, var_id, kx_array] = fsolve_kx(const_id, constlist, var_id, var, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds)
+function [const_id, constlist, var_id, kx_array] = fsolve_kx(const_id, constlist, var_id, var, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds, jac_error)
 % const is k_y or c_x; var is the other one
 % for each const in constlist, calculate k_x as a function of var using secant continuation
 
@@ -41,7 +41,13 @@ for i = 1:length(constlist)
     for j = 1:numiter
         uinit = u0 + sec*ds;
         fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);   
-        [usol, ~, flag, output] = fsolve(fext, uinit, options);
+        if jac_error > 0 % use Jacobian to find usol
+            Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
+            [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error);
+        else
+            [usol, ~, flag, output] = fsolve(fext, uinit, options);
+            iter = output.iterations;
+        end
         
         % if adaptive ds enabled, do fsolve with smaller ds until it converges
         while adaptive_ds
@@ -52,7 +58,13 @@ for i = 1:length(constlist)
             disp('Repeating iteration ' + string(j) + ' with smaller ds = ' + string(ds))
             uinit = u0 + sec*ds;
             fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);   
-            [usol, ~, flag, output] = fsolve(fext, uinit, options);
+            if jac_error > 0
+                Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
+                [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error);
+            else
+                [usol, ~, flag, output] = fsolve(fext, uinit, options);
+                iter = output.iterations;
+            end
         end
         
         % if regridding enabled, do fsolve with larger N until err < regrid_error
@@ -96,16 +108,22 @@ for i = 1:length(constlist)
             N=2*N;
             ell = [0:N/2 -N/2+1:-1]'; % variable in Fourier space
             zeta = (0:L/N:L-L/N)';
-            fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);
-            [usol, ~, ~, output] = fsolve(fext,usol, options);
+            fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);    
+            if jac_error > 0
+                Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
+                [usol, ~, iter] = jac_fsolve(fext, Jfext, usol, jac_error);
+            else
+                [usol, ~, ~, output] = fsolve(fext, usol, options);
+                iter = output.iterations;
+            end
         end
         
         % if adaptive ds enabled, adjust ds to optimize fsolve for next iteration
         if adaptive_ds
-            if output.iterations > 5
+            if iter > 5
                 ds = ds/2;
                 disp('ds decreased to ' + string(ds) + 'for iteration ' + string(j+1))
-            elseif output.iterations < 2
+            elseif iter < 2
                 ds = ds*1.3;
                 disp('ds increased to ' + string(ds) + 'for iteration ' + string(j+1))
             else

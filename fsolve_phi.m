@@ -3,7 +3,8 @@ function [zeta, rtn1, rtn2, cgrid] = fsolve_phi(N, L, ell, zeta, eps, c_x, k_y, 
 % regrid_error < 0 turns regridding off; phigrid, fftphigrid returned
 % regrid_error >= 0 is the threshold for regridding (doubling N); k_xgrid returned
 
-cgrid = [c_x*(6/7).^(0:39) 0];
+cgrid=[c_x];
+% cgrid = [c_x*(6/7).^(0:39) 0];
 k_xgrid = zeros(1, length(cgrid)); % row vector so other functions can define [k_xgrid; cgrid]
 phigrid = zeros(N,length(cgrid));
 fftphigrid = zeros(N,length(cgrid));
@@ -15,7 +16,7 @@ phiextinit = [phiinit;k_xinit]; % initial data
 % Newton's method
 for j = 1:length(cgrid)
     f = @(phiext) int_eq2d(phiext,cgrid(j),k_y,ell,eps,N,zeta);
-    phiextnew = fsolve(f,phiextinit, options);
+    phiextnew = fsolve(f, phiextinit, options);
     phiextinit = phiextnew;
     k_xgrid(j) = phiextinit(end);
     if regrid_error < 0

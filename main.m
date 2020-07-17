@@ -4,13 +4,14 @@ close all;
 clear all;
  
 % define optimization parameters
-N = 2^9; %  number of Fourier modes
+N = 2^3; %  number of Fourier modes
 numiter = 5; % number of secant continuation iterations
 ds = 0.8/sqrt(N); % secant continuation step size
 dvar = -1e-4; % "baby continuation" step size/direction
 options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
 regrid_error = 1e-4; % threshold to double N in fsolve_phi, fsolve_kx
 adaptive_ds = true;
+jac_error = 1e-6;
 
 % define constants
 eps = 0.3; % theta parameter
@@ -63,9 +64,20 @@ zeta = (0:L/N:L-L/N)';
 % ======================================================================
 
 
+const=1;sec=rand(N+2,1)*.01;
+u=cos(rand(N+2,1));
+du=1e-5*rand(N+2,1);
+du(end-5:end)=0;
+F0 = @(phisec) jac_inteq2dext(du,phisec,const,ell,eps,N,zeta,sec);
+J = @(phisec, dphisec) jac_inteq2dext(dphisec,phisec,const,ell,eps,N,zeta,sec);
+err = F0(u+du)-F0(u)-J(u,du);
+plot(err)
+
+return
+
 % plot k_x vs. c_x for each k_y in k_ys
 % dotted line = monotone increasing, dot-dashed line = monotone decreasing
-[const_id, constlist, var_id, kx_array] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds);
+[const_id, constlist, var_id, kx_array] = fsolve_kx("k_y", k_ys, "c_x", c_x, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds, jac_error);
 monoinc = seqtype_kx(1, kx_array, constlist);
 monodec = seqtype_kx(1i, kx_array, constlist);
 [~, ~, extr_pts] = seqtype_kx(0, kx_array, constlist);
@@ -75,4 +87,5 @@ plot_kx(const_id, constlist, var_id, kx_array, monoinc, monodec, extr_pts)
 % % for non-monotone plots of k_x vs. c_x, plot the (k_y, c_x) corresponding to global minima
 % figure('Name', 'plot_extrloc')
 % plot_extrloc(constlist, kx_array, extr_pts)
+
 

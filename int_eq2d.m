@@ -9,7 +9,7 @@ function F = int_eq2d(phiext,c_x,k_y,ell,eps,N,zeta)
   if c_x == 0
       Der = -abs(ell*k_y);
   else
-      Der = (c_x/2-sqrt(c_x^2/4+(ell.^2)*k_y^2+k_x*c_x*1i*ell));
+      Der = c_x/2-sqrt(c_x^2/4+(ell.^2)*k_y^2+k_x*c_x*1i*ell);
   end
   
   F = [phi+ifft((Der-1).^(-1).*fft(phi-h),'symmetric'); sum(phi)/N];
