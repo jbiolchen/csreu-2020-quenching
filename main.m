@@ -4,11 +4,11 @@ close all;
 clear all;
  
 % define optimization parameters
-N = 2^3; %  number of Fourier modes
-numiter = 5; % number of secant continuation iterations
+N = 2^5; %  number of Fourier modes
+numiter = 10; % number of secant continuation iterations
 ds = 0.8/sqrt(N); % secant continuation step size
 dvar = -1e-4; % "baby continuation" step size/direction
-options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
+options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',50,'Algorithm','trust-region-reflective');
 regrid_error = 1e-4; % threshold to double N in fsolve_phi, fsolve_kx
 adaptive_ds = true;
 jac_error = 1e-6;
@@ -64,11 +64,25 @@ zeta = (0:L/N:L-L/N)';
 % ======================================================================
 
 
+% [const_id, constlist, var_id, kx_array, norm_array] = fsolve_kx("c_x", [0.00001], "k_y", k_y, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds, -1);
+% 
+% figure
+% plot(norm_array(:, 1), norm_array(:, 2), 'Color', [1 0 0])
+% xlabel('k_y')
+% ylabel('norm')
+% title('H^1^/^2 norm vs. k_y for c_x = 0')
+% 
+% figure
+% plot(log(norm_array(:, 1)), log(norm_array(:, 2)), 'Color', [1 0 0])
+% xlabel('k_y')
+% ylabel('norm')
+% title('ln(H^1^/^2 norm) vs. ln(k_y) for c_x = 0')
+
 const=1;sec=rand(N+2,1)*.01;
 u=cos(rand(N+2,1));
 du=1e-5*rand(N+2,1);
-du(end-5:end)=0;
-F0 = @(phisec) jac_inteq2dext(du,phisec,const,ell,eps,N,zeta,sec);
+% du(end-5:end)=0;
+F0 = @(phisec) int_eq2d_ext(phisec,"k_y",const,ell,eps,N,zeta,sec,u);
 J = @(phisec, dphisec) jac_inteq2dext(dphisec,phisec,const,ell,eps,N,zeta,sec);
 err = F0(u+du)-F0(u)-J(u,du);
 plot(err)

@@ -1,4 +1,4 @@
-function [const_id, constlist, var_id, kx_array] = fsolve_kx(const_id, constlist, var_id, var, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds, jac_error)
+function [const_id, constlist, var_id, kx_array, norm_array] = fsolve_kx(const_id, constlist, var_id, var, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds, jac_error)
 % const is k_y or c_x; var is the other one
 % for each const in constlist, calculate k_x as a function of var using secant continuation
 
@@ -11,6 +11,7 @@ const_ids = ["k_y", "c_x"]; % possible values of const_id
 phiextinit = [phiinit;k_xinit]; % initial data
 
 kx_array = zeros(2*length(constlist), numiter);
+norm_array = zeros(numiter, 2*length(constlist)); % H^(1/2) norm vs. var (useful for const = c_x = 0)
 for i = 1:length(constlist)
     const = constlist(i);
     
@@ -135,7 +136,12 @@ for i = 1:length(constlist)
         kx_array(2*i-1:2*i, j) = usol(end-1:end);
         sec = usol - u0;
         sec = sec/norm(sec);
-        u0=usol;  
+        u0=usol;
+        
+        % calculate and store H^(1/2) norm, sum_l (|l|*|uhat_l|^2), vs. var
+        fftu0 = fft(u0(1:N));
+        norm_array(j, 2*i-1) = u0(end);
+        norm_array(j, 2*i) = sum(abs(ell.*fftu0.^2));        
     end
 end
 end
