@@ -10,6 +10,8 @@ zeta_in = zeta;
 const_ids = ["k_y", "c_x"]; % possible values of const_id
 phiextinit = [phiinit;k_xinit]; % initial data
 
+maxiter = options.MaxIter; % use the same maxiter for fsolve and jac_fsolve
+
 kx_array = zeros(2*length(constlist), numiter);
 norm_array = zeros(numiter, 2*length(constlist)); % H^(1/2) norm vs. var (useful for const = c_x = 0)
 for i = 1:length(constlist)
@@ -44,7 +46,7 @@ for i = 1:length(constlist)
         fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);   
         if jac_error > 0 % use Jacobian to find usol
             Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
-            [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error);
+            [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error, maxiter);
         else
             [usol, ~, flag, output] = fsolve(fext, uinit, options);
             iter = output.iterations;
@@ -61,7 +63,7 @@ for i = 1:length(constlist)
             fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);   
             if jac_error > 0
                 Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
-                [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error);
+                [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error, maxiter);
             else
                 [usol, ~, flag, output] = fsolve(fext, uinit, options);
                 iter = output.iterations;
@@ -112,7 +114,7 @@ for i = 1:length(constlist)
             fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);    
             if jac_error > 0
                 Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
-                [usol, ~, iter] = jac_fsolve(fext, Jfext, usol, jac_error);
+                [usol, ~, iter] = jac_fsolve(fext, Jfext, usol, jac_error, maxiter);
             else
                 [usol, ~, ~, output] = fsolve(fext, usol, options);
                 iter = output.iterations;
@@ -123,10 +125,10 @@ for i = 1:length(constlist)
         if adaptive_ds
             if iter > 5
                 ds = ds/2;
-                disp('ds decreased to ' + string(ds) + 'for iteration ' + string(j+1))
+                disp('ds decreased to ' + string(ds) + ' for iteration ' + string(j+1))
             elseif iter < 2
                 ds = ds*1.3;
-                disp('ds increased to ' + string(ds) + 'for iteration ' + string(j+1))
+                disp('ds increased to ' + string(ds) + ' for iteration ' + string(j+1))
             else
                 % don't change ds
             end

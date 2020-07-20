@@ -4,21 +4,21 @@ close all;
 clear all;
  
 % define optimization parameters
-N = 2^5; %  number of Fourier modes
-numiter = 10; % number of secant continuation iterations
-ds = 0.8/sqrt(N); % secant continuation step size
-dvar = -1e-4; % "baby continuation" step size/direction
-options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',50,'Algorithm','trust-region-reflective');
+N = 2^9; %  number of Fourier modes
+numiter = 500; % number of secant continuation iterations
+ds = 30/sqrt(N); % secant continuation step size
+dvar = 1e-4; % "baby continuation" step size/direction
+options = optimset('Jacobian','off','Display','iter','TolFun',1e-6,'TolX',1e-6,'MaxIter',10,'Algorithm','trust-region-reflective');
 regrid_error = 1e-4; % threshold to double N in fsolve_phi, fsolve_kx
 adaptive_ds = true;
-jac_error = 1e-6;
+jac_error = 1e-15;
 
 % define constants
 eps = 0.3; % theta parameter
-c_x = 0.1;
+c_x = .1;
 c_xs = 0.1:0.1:1.1; % fixed values for fsolve_kx only
-k_y = 0.1;
-k_ys = 0.1:0.1:0.2; % fixed values for fsolve_kx only
+k_y = 1;
+k_ys = [1]; % fixed values for fsolve_kx only
 L = 2*pi; % length of domain
 k_xinit = 1; % initial k_x; notice that k_x = -c_y*k_y/c_x with c_y = -c_x/k_y
 phiinit = zeros(N,1); % initial function
@@ -78,16 +78,16 @@ zeta = (0:L/N:L-L/N)';
 % ylabel('norm')
 % title('ln(H^1^/^2 norm) vs. ln(k_y) for c_x = 0')
 
-const=1;sec=rand(N+2,1)*.01;
-u=cos(rand(N+2,1));
-du=1e-5*rand(N+2,1);
-% du(end-5:end)=0;
-F0 = @(phisec) int_eq2d_ext(phisec,"k_y",const,ell,eps,N,zeta,sec,u);
-J = @(phisec, dphisec) jac_inteq2dext(dphisec,phisec,const,ell,eps,N,zeta,sec);
-err = F0(u+du)-F0(u)-J(u,du);
-plot(err)
-
-return
+% const=1;sec=rand(N+2,1)*.01;
+% u=cos(ones(N+2,1));
+% du=1e-5*rand(N+2,1);
+% % du(end-1:end)=0;
+% F0 = @(phisec) int_eq2d_ext(phisec,"k_y",const,ell,eps,N,zeta,sec,u);
+% J = @(phisec, dphisec) jac_inteq2dext(dphisec,phisec,const,ell,eps,N,zeta,sec);
+% err = F0(u+du)-F0(u)-J(u,du);
+% plot(err)
+% 
+% return
 
 % plot k_x vs. c_x for each k_y in k_ys
 % dotted line = monotone increasing, dot-dashed line = monotone decreasing
