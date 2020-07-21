@@ -16,7 +16,7 @@ for i = 1:length(constlist)
     end
     
     % check for a point on curve i that should be plotted with a marker
-    if ismember(i, points(:, 1))
+    if ~isempty(points) && ismember(i, points(:, 1))
         col = points(find(points(:,1) == i), 2);
         plot(kx_array(2*i, col), kx_array(2*i-1, col), 'o', 'Color', colors(i, :), 'HandleVisibility', 'off')
     end  

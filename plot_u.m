@@ -6,11 +6,11 @@ colors = distinguishable_colors(length(cgrid));
 
 hold on
 for m = 1:length(cgrid)
-  plot(zeta,phigrid(:,m)-zeta, 'Color', colors(m, :))
+  plot(zeta,min(phigrid(:,m)-zeta,0), 'Color', colors(m, :))
 end
 hold off
-title(legend(string(cgrid)), 'c')
+title(legend(string(cgrid)), 'c_x')
 legend("Location", "eastoutside")
 xlabel('zeta')
-ylabel('u')
+ylabel('v(0,zeta)')
 end
