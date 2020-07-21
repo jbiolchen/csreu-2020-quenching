@@ -102,6 +102,5 @@ end
 
 
 
-saveas(gcf,"C:\Users\mdeim\Desktop\plot1D.png")
 
 
