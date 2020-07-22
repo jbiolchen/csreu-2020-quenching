@@ -1,6 +1,5 @@
-function DF = jac_inteq2d(dphiext,phiext,var,dvar,const,ell,eps,N,zeta)
+function DF = jac_inteq2d(dphiext,phiext,var,dvar,const_id,const,ell,eps,N,zeta)
 % for adding Jacobian to fsolve
-% currently only for k_x vs. c_x with k_y fixed
 
 phi = phiext(1:end-1); % function
 k_x = phiext(end); % k_x variable as given in the notes
@@ -8,37 +7,37 @@ h=1+eps*sin(phi-zeta)-k_x; % g(u)-k_x in the notes
 
 dphi = dphiext(1:end-1);
 dk_x = dphiext(end);
-% dh = eps*cos(phi-zeta).*dphi-dk_x;
 
-% define 2D derivative operator in Fourier space
-if var == 0
-  Der = -abs(ell*const);
-else
-  Der = var/2-sqrt(var^2/4+(ell.^2)*const^2+k_x*var*1i*ell);
+if const_id == "k_y"
+    c_x = var;
+    k_y = const;
+else % const_id == "c_x"
+    c_x = const;
+    k_y = var;
 end
 
-% F0 = phi+ifft((Der-1).^(-1).*fft(phi-h),'symmetric'); % from int_eq2d
-% assuming var != 0, var = c_x
+% define 2D derivative operator in Fourier space
+if c_x == 0
+  Der = -abs(ell*k_y);
+else
+  Der = c_x/2-sqrt(c_x^2/4+(ell.^2)*k_y^2+k_x*c_x*1i*ell);
+end
+
+% define Jacobian info
+% from int_eq2d, F0 = phi+ifft((Der-1).^(-1).*fft(phi-h),'symmetric');
 dphi_F0 = dphi + ifft((Der-1).^(-1).*fft(dphi - eps*cos(phi-zeta).*dphi), 'symmetric'); % (dF0/dphi)*dphi
-
-Der_kx = (var*1i*ell)./((Der-1).^2.*2.*sqrt(var^2/4+(ell.^2)*const^2+k_x*var*1i*ell)); % d/dkx (Der-1).^(-1)
+Der_kx = (c_x*1i*ell)./((Der-1).^2.*2.*sqrt(c_x^2/4+(ell.^2)*k_y^2+k_x*c_x*1i*ell)); % d/dkx (Der-1).^(-1)
+if const_id == "k_y"
+    Der_var = (1/2 - (c_x/2+k_x*1i*ell)./(2*sqrt(c_x^2/4+(ell.^2)*k_y^2+k_x*c_x*1i*ell)))./((Der-1).^2)*(-1); % d/dc_x (Der-1).^(-1)
+else % const_id == "c_x"
+    Der_var = ell.^2*k_y./(sqrt(c_x^2/4+(ell.^2)*k_y^2+k_x*c_x*1i*ell).*(Der-1).^2); % d/dk_y (Der-1).^(-1)
+    if c_x == 0 % same as above, but NaN (i.e. 0/0) values replaced with 0
+        Der_kx = 0;
+        Der_var = abs(ell)./(Der-1).^2; % d/dk_y (Der-1).^(-1)
+    end
+end
 dkx_F0 = ifft(Der_kx.*fft(phi-h)*dk_x + (Der-1).^(-1).*fft(dk_x*ones(N, 1)), 'symmetric'); % (dF0/dk_x)*dk_x
-
-Der_var = (1/2 - (var/2+k_x*1i*ell)./(2*sqrt(var^2/4+(ell.^2)*const^2+k_x*var*1i*ell)))./((Der-1).^2)*(-1); % d/dvar (Der-1).^(-1)
-dvar_F0 = ifft(Der_var.*fft(phi-h)*dvar, 'symmetric'); % (dF0/dvar)*dvar
+dvar_F0 = ifft(Der_var.*fft(phi-h)*dvar, 'symmetric'); % (dF0/dc_x)*dc_x or (dF0/dk_y)*dk_y
 
 DF = [dphi_F0 + dkx_F0 + dvar_F0; sum(dphi)/N];
-
-
-
-% 
-% 
-% 
-% 
-% dvar_Der = 1/2 - (var/2 + k_x*1i*ell)./(2*sqrt(var^2/4+(ell.^2)*const^2+k_x*var*1i*ell));
-% dvar_Derinv = -dvar_Der./Der.^2;
-% 
-% DF = [dphi+ifft((Der-1).^(-1).*fft(dphi-dh),'symmetric'); sum(dphi)/N];
-% Dvar= ifft(dvar_Derinv.*fft(phi-h)*dvar, 'symmetric');
-% DF=DF+[Dvar; 0];
 end

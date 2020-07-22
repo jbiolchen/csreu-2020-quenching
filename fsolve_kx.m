@@ -1,6 +1,8 @@
 function [const_id, constlist, var_id, kx_array, norm_array] = fsolve_kx(const_id, constlist, var_id, var, N, L, numiter, ell, zeta, eps, k_xinit, phiinit, ds, dvar, options, regrid_error, adaptive_ds, jac_error)
 % const is k_y or c_x; var is the other one
-% for each const in constlist, calculate k_x as a function of var using secant continuation
+% kx_array: for each const in constlist, k_x vs. var
+% norm_array: H^(1/2) norm vs. var (useful for const = c_x = 0)
+% uses secant continuation, with options for adaptive N, adaptive ds, Jacobian
 
 % store input grid size to reset after each continuation
 N_in = N;
@@ -13,7 +15,7 @@ phiextinit = [phiinit;k_xinit]; % initial data
 maxiter = options.MaxIter; % use the same maxiter for fsolve and jac_fsolve
 
 kx_array = zeros(2*length(constlist), numiter);
-norm_array = zeros(numiter, 2*length(constlist)); % H^(1/2) norm vs. var (useful for const = c_x = 0)
+norm_array = zeros(numiter, 2*length(constlist));
 for i = 1:length(constlist)
     const = constlist(i);
     
@@ -45,7 +47,7 @@ for i = 1:length(constlist)
         uinit = u0 + sec*ds;
         fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);   
         if jac_error > 0 % use Jacobian to find usol
-            Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
+            Jfext = @(du, u) jac_inteq2dext(du,u,const_id,const,ell,eps,N,zeta,sec);
             [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error, maxiter);
         else
             [usol, ~, flag, output] = fsolve(fext, uinit, options);
@@ -62,7 +64,7 @@ for i = 1:length(constlist)
             uinit = u0 + sec*ds;
             fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);   
             if jac_error > 0
-                Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
+                Jfext = @(du, u) jac_inteq2dext(du,u,const_id,const,ell,eps,N,zeta,sec);
                 [usol, flag, iter] = jac_fsolve(fext, Jfext, uinit, jac_error, maxiter);
             else
                 [usol, ~, flag, output] = fsolve(fext, uinit, options);
@@ -78,7 +80,7 @@ for i = 1:length(constlist)
                 % using a stricter err definition, decrease N for iteration j+1 if reasonable
                 err=abs(fft(usol(1:end-2)));
                 err=max(err(1*N/8:7*N/8));
-                if err < regrid_error
+                if err < regrid_error && N >= 16
                     disp('Now decreasing grid size to new N = ' + string(N/2) + ' for iteration ' + string(j+1))
                     
                     usolh = fft(usol(1:end-2));
@@ -113,7 +115,7 @@ for i = 1:length(constlist)
             zeta = (0:L/N:L-L/N)';
             fext = @(u) int_eq2d_ext(u,const_id,const,ell,eps,N,zeta,sec,uinit);    
             if jac_error > 0
-                Jfext = @(du, u) jac_inteq2dext(du,u,const,ell,eps,N,zeta,sec);
+                Jfext = @(du, u) jac_inteq2dext(du,u,const_id,const,ell,eps,N,zeta,sec);
                 [usol, ~, iter] = jac_fsolve(fext, Jfext, usol, jac_error, maxiter);
             else
                 [usol, ~, ~, output] = fsolve(fext, usol, options);
@@ -127,7 +129,7 @@ for i = 1:length(constlist)
                 ds = ds/2;
                 disp('ds decreased to ' + string(ds) + ' for iteration ' + string(j+1))
             elseif iter < 2
-                ds = ds*1.3;
+                ds = min(ds*1.3, 2);
                 disp('ds increased to ' + string(ds) + ' for iteration ' + string(j+1))
             else
                 % don't change ds
@@ -141,9 +143,10 @@ for i = 1:length(constlist)
         u0=usol;
         
         % calculate and store H^(1/2) norm, sum_l (|l|*|uhat_l|^2), vs. var
-        fftu0 = fft(u0(1:N));
+        fftu0 = abs(fft(u0(1:end-2)));
+        fftu0 = fftu0/length(fftu0); % normalize to N for current iteration
         norm_array(j, 2*i-1) = u0(end);
-        norm_array(j, 2*i) = sum(abs(ell.*fftu0.^2));        
+        norm_array(j, 2*i) = sum(abs(ell.*fftu0.^2));
     end
 end
 end
